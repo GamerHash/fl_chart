@@ -195,7 +195,7 @@ abstract class AxisChartPainter<D extends AxisChartData> extends BaseChartPainte
       } else {
         final drawOffset = Offset(
           rect.center.dx - (tp.width / 2),
-          viewSize.height + 10,
+          viewSize.height + 20,
         );
         tp.paint(canvas, drawOffset);
       }

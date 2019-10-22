@@ -560,7 +560,7 @@ class LineChartPainter extends AxisChartPainter {
 
       /// Draw the indicator line
       final from = Offset(touchedSpot.offset.dx, getTopOffsetDrawSize() + chartViewSize.height);
-      final to = touchedSpot.offset;
+      final to = Offset(touchedSpot.offset.dx, 0);
 
       touchLinePaint.color = indicatorData.indicatorBelowLine.color;
       touchLinePaint.strokeWidth = indicatorData.indicatorBelowLine.strokeWidth;
@@ -569,7 +569,7 @@ class LineChartPainter extends AxisChartPainter {
       /// Draw the indicator dot
       final double selectedSpotDotSize = indicatorData.touchedSpotDotData.dotSize;
       dotPaint.color = indicatorData.touchedSpotDotData.dotColor;
-      canvas.drawCircle(to, selectedSpotDotSize, dotPaint);
+      canvas.drawCircle(touchedSpot.offset, selectedSpotDotSize, dotPaint);
     }
   }
 
