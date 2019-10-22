@@ -14,19 +14,14 @@ import 'axis_chart_data.dart';
 /// in child classes -> [BarChartPainter], [LineChartPainter]
 /// [data] is the currently showing data (it may produced by an animation using lerp function),
 /// [targetData] is the target data, that animation is going to show (if animating)
-abstract class AxisChartPainter<D extends AxisChartData>
-    extends BaseChartPainter<D> {
+abstract class AxisChartPainter<D extends AxisChartData> extends BaseChartPainter<D> {
   final D data;
   final D targetData;
 
   Paint gridPaint, backgroundPaint, bgTouchTooltipPaint;
 
-  AxisChartPainter(this.data, this.targetData,
-      {FlTouchInputNotifier touchInputNotifier,
-      StreamSink<BaseTouchResponse> touchedResponseSink})
-      : super(data, targetData,
-            touchInputNotifier: touchInputNotifier,
-            touchedResponseSink: touchedResponseSink) {
+  AxisChartPainter(this.data, this.targetData, {FlTouchInputNotifier touchInputNotifier, StreamSink<BaseTouchResponse> touchedResponseSink})
+      : super(data, targetData, touchInputNotifier: touchInputNotifier, touchedResponseSink: touchedResponseSink) {
     gridPaint = Paint()..style = PaintingStyle.fill;
 
     backgroundPaint = Paint()..style = PaintingStyle.fill;
@@ -54,8 +49,7 @@ abstract class AxisChartPainter<D extends AxisChartData>
       double verticalSeek = data.minX;
       while (verticalSeek < data.maxX) {
         if (data.gridData.checkToShowVerticalGrid(verticalSeek)) {
-          final FlLine flLineStyle =
-              data.gridData.getDrawingVerticalGridLine(verticalSeek);
+          final FlLine flLineStyle = data.gridData.getDrawingVerticalGridLine(verticalSeek);
           gridPaint.color = flLineStyle.color;
           gridPaint.strokeWidth = flLineStyle.strokeWidth;
 
@@ -79,8 +73,7 @@ abstract class AxisChartPainter<D extends AxisChartData>
       double horizontalSeek = data.minY;
       while (horizontalSeek < data.maxY) {
         if (data.gridData.checkToShowHorizontalGrid(horizontalSeek)) {
-          final FlLine flLine =
-              data.gridData.getDrawingHorizontalGridLine(horizontalSeek);
+          final FlLine flLine = data.gridData.getDrawingHorizontalGridLine(horizontalSeek);
           gridPaint.color = flLine.color;
           gridPaint.strokeWidth = flLine.strokeWidth;
 
@@ -120,8 +113,7 @@ abstract class AxisChartPainter<D extends AxisChartData>
     );
   }
 
-  void drawTouchTooltip(Canvas canvas, Size viewSize,
-      TouchTooltipData tooltipData, List<TouchedSpot> touchedSpots) {
+  void drawTouchTooltip(Canvas canvas, Size viewSize, TouchTooltipData tooltipData, List<TouchedSpot> touchedSpots) {
     if (!shouldDrawTouch()) {
       return;
     }
@@ -131,8 +123,7 @@ abstract class AxisChartPainter<D extends AxisChartData>
     /// creating TextPainters to calculate the width and height of the tooltip
     final List<TextPainter> drawingTextPainters = [];
 
-    final List<TooltipItem> tooltipItems =
-        tooltipData.getTooltipItems(touchedSpots);
+    final List<TooltipItem> tooltipItems = tooltipData.getTooltipItems(touchedSpots);
     if (tooltipItems.length != touchedSpots.length) {
       throw Exception('tooltipItems and touchedSpots size should be same');
     }
@@ -143,15 +134,19 @@ abstract class AxisChartPainter<D extends AxisChartData>
         continue;
       }
 
-      final TextSpan span =
-          TextSpan(style: tooltipItem.textStyle, text: tooltipItem.text);
-      final TextPainter tp = TextPainter(
-          text: span,
-          textAlign: TextAlign.center,
-          textDirection: TextDirection.ltr);
-      tp.layout(maxWidth: tooltipData.maxContentWidth);
-      drawingTextPainters.add(tp);
+      final TextSpan spanAbove = TextSpan(style: tooltipItem.textAboveStyle, text: tooltipItem.textAboveChart);
+      final TextPainter tpAbove = TextPainter(text: spanAbove, textAlign: TextAlign.center, textDirection: TextDirection.ltr);
+      tpAbove.layout(maxWidth: tooltipData.maxContentWidth);
+      drawingTextPainters.add(tpAbove);
+
+      if (tooltipItem.textBelowChart != null && tooltipItem.textBelowStyle != null) {
+        final TextSpan spanBelow = TextSpan(style: tooltipItem.textBelowStyle, text: tooltipItem.textBelowChart);
+        final TextPainter tpBelow = TextPainter(text: spanBelow, textAlign: TextAlign.center, textDirection: TextDirection.ltr);
+        tpBelow.layout(maxWidth: tooltipData.maxContentWidth);
+        drawingTextPainters.add(tpBelow);
+      }
     }
+
     if (drawingTextPainters.isEmpty) {
       return;
     }
@@ -178,36 +173,32 @@ abstract class AxisChartPainter<D extends AxisChartData>
     /// we should get the most top FlSpot Offset to draw the tooltip on top of it
     final Offset mostTopOffset = touchedSpots.first.offset;
 
-    final double tooltipWidth =
-        biggerWidth + tooltipData.tooltipPadding.horizontal;
-    final double tooltipHeight =
-        sumTextsHeight + tooltipData.tooltipPadding.vertical;
+    final double tooltipWidth = biggerWidth + tooltipData.tooltipPadding.horizontal;
+    final double tooltipHeight = sumTextsHeight + tooltipData.tooltipPadding.vertical;
 
     /// draw the background rect with rounded radius
-    final Rect rect = Rect.fromLTWH(
-        mostTopOffset.dx - (tooltipWidth / 2),
-        mostTopOffset.dy - tooltipHeight - tooltipData.tooltipBottomMargin,
-        tooltipWidth,
-        tooltipHeight);
+    final Rect rect = Rect.fromLTWH(mostTopOffset.dx - (tooltipWidth / 2),
+        mostTopOffset.dy - tooltipHeight - tooltipData.tooltipBottomMargin, tooltipWidth, tooltipHeight);
     final Radius radius = Radius.circular(tooltipData.tooltipRoundedRadius);
-    final RRect roundedRect = RRect.fromRectAndCorners(rect,
-        topLeft: radius,
-        topRight: radius,
-        bottomLeft: radius,
-        bottomRight: radius);
+    final RRect roundedRect = RRect.fromRectAndCorners(rect, topLeft: radius, topRight: radius, bottomLeft: radius, bottomRight: radius);
     bgTouchTooltipPaint.color = tooltipData.tooltipBgColor;
     canvas.drawRRect(roundedRect, bgTouchTooltipPaint);
 
     /// draw the texts one by one in below of each other
-    double topPosSeek = tooltipData.tooltipPadding.top;
     for (TextPainter tp in drawingTextPainters) {
-      final drawOffset = Offset(
-        rect.center.dx - (tp.width / 2),
-        rect.topCenter.dy + topPosSeek,
-      );
-      tp.paint(canvas, drawOffset);
-      topPosSeek += tp.height;
-      topPosSeek += textsBelowMargin;
+      if (drawingTextPainters.indexOf(tp) == 0) {
+        final drawOffset = Offset(
+          rect.center.dx - (tp.width / 2),
+          -20,
+        );
+        tp.paint(canvas, drawOffset);
+      } else {
+        final drawOffset = Offset(
+          rect.center.dx - (tp.width / 2),
+          viewSize.height + 10,
+        );
+        tp.paint(canvas, drawOffset);
+      }
     }
   }
 
@@ -215,9 +206,7 @@ abstract class AxisChartPainter<D extends AxisChartData>
   /// to the view base axis x .
   /// the view 0, 0 is on the top/left, but the spots is bottom/left
   double getPixelX(double spotX, Size chartUsableSize) {
-    return (((spotX - data.minX) / (data.maxX - data.minX)) *
-            chartUsableSize.width) +
-        getLeftOffsetDrawSize();
+    return (((spotX - data.minX) / (data.maxX - data.minX)) * chartUsableSize.width) + getLeftOffsetDrawSize();
   }
 
   /// With this function we can convert our [FlSpot] y
@@ -226,8 +215,7 @@ abstract class AxisChartPainter<D extends AxisChartData>
     double spotY,
     Size chartUsableSize,
   ) {
-    double y = ((spotY - data.minY) / (data.maxY - data.minY)) *
-        chartUsableSize.height;
+    double y = ((spotY - data.minY) / (data.maxY - data.minY)) * chartUsableSize.height;
     y = chartUsableSize.height - y;
     return y + getTopOffsetDrawSize();
   }

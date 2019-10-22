@@ -510,7 +510,7 @@ class LineChartPainter extends AxisChartPainter {
     }
 
     barPaint.strokeWidth = barData.barWidth;
-    canvas.drawPath(dashPath(barPath, dashArray: CircularIntervalList<double>(<double>[5.0, 6.0])), barPaint);
+    canvas.drawPath(dashPath(barPath, dashArray: CircularIntervalList<double>(<double>[6.0, 6.0])), barPaint);
   }
 
   /// clip the border (remove outside the border)
