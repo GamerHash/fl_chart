@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:fl_chart/src/chart/bar_chart/bar_chart_painter.dart';
 import 'package:fl_chart/src/chart/base/base_chart/base_chart_data.dart';
@@ -133,15 +134,16 @@ abstract class AxisChartPainter<D extends AxisChartData> extends BaseChartPainte
       if (tooltipItem == null) {
         continue;
       }
-
+      final TextAlign textAlign = touchedSpots.first.offset.dx > (viewSize.width / 2) ? TextAlign.right : TextAlign.left;
+      print(textAlign);
       final TextSpan spanAbove = TextSpan(style: tooltipItem.textAboveStyle, text: tooltipItem.textAboveChart);
-      final TextPainter tpAbove = TextPainter(text: spanAbove, textAlign: TextAlign.center, textDirection: TextDirection.ltr);
+      final TextPainter tpAbove = TextPainter(text: spanAbove, textAlign: textAlign, textDirection: TextDirection.ltr);
       tpAbove.layout(maxWidth: tooltipData.maxContentWidth);
       drawingTextPainters.add(tpAbove);
 
       if (tooltipItem.textBelowChart != null && tooltipItem.textBelowStyle != null) {
         final TextSpan spanBelow = TextSpan(style: tooltipItem.textBelowStyle, text: tooltipItem.textBelowChart);
-        final TextPainter tpBelow = TextPainter(text: spanBelow, textAlign: TextAlign.center, textDirection: TextDirection.ltr);
+        final TextPainter tpBelow = TextPainter(text: spanBelow, textAlign: textAlign, textDirection: TextDirection.ltr);
         tpBelow.layout(maxWidth: tooltipData.maxContentWidth);
         drawingTextPainters.add(tpBelow);
       }
@@ -186,19 +188,20 @@ abstract class AxisChartPainter<D extends AxisChartData> extends BaseChartPainte
 
     /// draw the texts one by one in below of each other
     for (TextPainter tp in drawingTextPainters) {
+      double dy;
       if (drawingTextPainters.indexOf(tp) == 0) {
-        final drawOffset = Offset(
-          rect.center.dx - (tp.width / 2),
-          -20,
-        );
-        tp.paint(canvas, drawOffset);
+        dy = -20;
       } else {
-        final drawOffset = Offset(
-          rect.center.dx - (tp.width / 2),
-          viewSize.height + 20,
-        );
-        tp.paint(canvas, drawOffset);
+        dy = viewSize.height + 20;
       }
+
+      double dx = rect.center.dx - (tp.width / 2);
+      /*Prevent labels from showing outside in left*/
+      dx = max(dx, 0);
+      /*Prevent labels from showing outside in right*/
+      dx = min(dx, viewSize.width - tp.width);
+
+      tp.paint(canvas, Offset(dx, dy));
     }
   }
 
