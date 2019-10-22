@@ -135,7 +135,6 @@ abstract class AxisChartPainter<D extends AxisChartData> extends BaseChartPainte
         continue;
       }
       final TextAlign textAlign = touchedSpots.first.offset.dx > (viewSize.width / 2) ? TextAlign.right : TextAlign.left;
-      print(textAlign);
       final TextSpan spanAbove = TextSpan(style: tooltipItem.textAboveStyle, text: tooltipItem.textAboveChart);
       final TextPainter tpAbove = TextPainter(text: spanAbove, textAlign: textAlign, textDirection: TextDirection.ltr);
       tpAbove.layout(maxWidth: tooltipData.maxContentWidth);
@@ -220,6 +219,7 @@ abstract class AxisChartPainter<D extends AxisChartData> extends BaseChartPainte
   ) {
     double y = ((spotY - data.minY) / (data.maxY - data.minY)) * chartUsableSize.height;
     y = chartUsableSize.height - y;
-    return y + getTopOffsetDrawSize();
+    y = y + getTopOffsetDrawSize();
+    return y.isNaN ? chartUsableSize.height - spotY : y;
   }
 }
